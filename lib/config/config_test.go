@@ -613,6 +613,26 @@ func TestNewSaveLoad(t *testing.T) {
 	}
 }
 
+func TestSaveReadOnly(t *testing.T) {
+	path := "temp.xml"
+	os.Remove(path)
+	defer os.Remove(path)
+
+	if err := os.WriteFile(path, []byte("data"), 0o444); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := wrap(path, New(device1), device1)
+	defer cfg.stop()
+
+	if err := cfg.Save(); err != nil {
+		t.Error(err)
+	}
+	if bs, _ := os.ReadFile(path); string(bs) != "data" {
+		t.Error("read-only config file was overwritten")
+	}
+}
+
 func TestWindowsLineEndings(t *testing.T) {
 	if !build.IsWindows {
 		t.Skip("Windows specific")

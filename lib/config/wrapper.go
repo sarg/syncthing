@@ -505,6 +505,11 @@ func (w *wrapper) Save() error {
 	w.mut.Lock()
 	defer w.mut.Unlock()
 
+	if info, err := os.Stat(w.path); err == nil && info.Mode().Perm()&0o222 == 0 {
+		slog.Error("Config file is read-only; skipping save", slogutil.FilePath(w.path))
+		return nil
+	}
+
 	fd, err := osutil.CreateAtomic(w.path)
 	if err != nil {
 		l.Debugln("CreateAtomic:", err)
